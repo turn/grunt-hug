@@ -2,36 +2,37 @@
 
 Hug makes developing for the web easier. You provide a directory of source files, it wraps them up in anonymous functions and concatinates them with dependency resolution in to a destination file.
 
-### Reasons Why Hug May Make You Happy
+## Why Hugging Will Make You Happy
 
-* You can use `var` at the root level of your files and they'll only be scoped to that file (as in, won't leak to the environment).
-* You can `require([relativePath])` other files to bring them in to the scope you're currently in.
-* Hug will concatinate your files, paying attention to your `require` statements for dependency resolution.
+* It scopes variable declarations to the file they're declared in (as in, they won't leak to the environment).
+* You can `require([relativePath])` other files to bring them into the current scope.
+* Concatination of your files with dependency resolution (done by paying attention to your `require` statements).
+* It can optionally generate one variable to encompasing your whole API.
 
-### An Example
+## An Example
 
 Say I have the following file structure:
-- src
-	- language
-		- message
-	    	- aSaying.js
-    	- words.js
-    	- speaker.js
-	- init.js
-- grunt.js
+```
+src/
+    language/
+        message/
+                aSaying.js
+        words.js
+        speaker.js
+    init.js
+grunt.js
+```
 
-With the following contents:
+With the following file contents:
 
 ``` javascript
 // src/init.js
-
 var theMessage = require('language/message/aSaying.js').whatTheySay;
 console.log(theMessage);
 ```
 
 ``` javascript
 // src/language/message/aSaying.js
-
 var theWord = require('../words.js').aWord;
 var speaker = require('../speaker.js');
 
@@ -40,13 +41,11 @@ exports.whatTheySay = speaker(theWord);
 
 ``` javascript
 // src/language/words.js
-
 exports.aWord = "world";
 ````
 
 ``` javascript
 // src/language/speaker.js
-
 exports = function(anything){
 	return "Hello, " + anything + "!";
 };
@@ -69,7 +68,7 @@ When grunt is asked to hug this source tree, it'll concatinate the files in orde
 
 Running `hi.js` will output "Hello, world!" on the console, with no trace of the program ever running (nothing leaked to the global scope).
 
-### Usage
+## Usage
 
 Inside your `grunt.js` file, in the object you pass to initConfig, add a section named `hug`. Inside this section, add 1 or more subsections for different `hug` tasks.
 
@@ -83,7 +82,7 @@ This defines the root directory of your source tree. Any JS file under this dire
 
 This defines what the path for the generated file should be. Grunt will automatically generate directories if they don't exit.
 
-##### exportsVariable ```string``` (optional)
+##### (optional) exportsVariable ```string```
 
 This is an optional parameter. If provided, the generated file will produce a global variable with the given name holding the export tree. For example, if we had set `exportsVariable: 'hugExample'` for the example above, and ran the generated script, we would end up with a global variable like this:
 
@@ -103,5 +102,9 @@ console.log(hugExample);
 //		},
 //		init: {}
 //	}
-
+```
 Note that you can't use the exportsVariable in the source code, you have to use the `require` method to access the exports of other files.
+
+## Known Limitations and Possibilities
+* You cannot `require` a file outside of your source tree. For third-party libraries use grunt `concat` to concatinate them ahead of the hug generated file. You'll also likely want to minify the generated file.
+* You can set `exportsVariable` to `exports` and use the generated file in another source tree (which can then also be hugged) as a way to cleanly encapsulate your APIs.
