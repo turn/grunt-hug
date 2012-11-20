@@ -1,6 +1,6 @@
 # grunt-contrib-hug [![Build Status](https://secure.travis-ci.org/ozanturgut/grunt-contrib-hug.png?branch=master)](http://travis-ci.org/ozanturgut/grunt-contrib-hug)
 
-Hug makes developing for the web easier. You provide a directory of source files, it wraps them up in anonymous functions and concatinates them with dependency resolution in to a destination file.
+Hug makes developing web applications easier. You provide a directory, grunt wraps them up in anonymous functions and concatinates them with dependency resolution in to a destination file.
 
 ## Why Hugging Will Make You Happy
 
