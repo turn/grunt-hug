@@ -177,7 +177,7 @@ Hug.prototype._parseFile = function(filepath, rootdir, subdir, filename){
 	
 	contents = "(function(){\n";
 	contents += "var module = {};\n";
-	contents += "var exports = module.exports = {};\n";
+	contents += "var exports = {};\n";
 	contents += src;
 	contents += "\n__export(" + JSON.stringify(objPath) + ", module.exports || exports);\n}());";
 
