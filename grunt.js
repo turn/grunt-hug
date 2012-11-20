@@ -49,6 +49,10 @@ module.exports = function(grunt) {
         src: "./test/fixtures",
         dest: "./tmp/test.js",
         exportsVariable: "theGlobal"
+      },
+      example: {
+        src: "./example",
+        dest: "./tmp/example.js"
       }
     },
 
