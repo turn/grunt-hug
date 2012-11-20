@@ -131,6 +131,7 @@ Hug.prototype._prepare = function(sources){
 	}
 
 	header += "(function(){\n";
+	header += "var module = {};\n";
 	header += "var exports = {};\n";
 	header += "var __export = function(objectPath, data){\n";
 	header += "		var curObj = exports, objName, index = 0, length = objectPath.length - 1;\n";
@@ -150,7 +151,7 @@ Hug.prototype._prepare = function(sources){
 	header += "		return curObj;\n";
 	header += "};\n";
 
-	var footer = "\nreturn exports;\n";
+	var footer = "\nreturn module.exports || exports;\n";
 	footer += "}());\n";
 	sourceList.push(header);
 
@@ -164,7 +165,8 @@ Hug.prototype._prepare = function(sources){
 };
 
 Hug.prototype._parseFile = function(filepath, rootdir, subdir, filename){
-	var src,
+	var contents,
+		src,
 		dependencyMatch, 
 		dependencyPath,
 		dependencyFinder = this.DEPENDENCY_FINDER,
@@ -172,13 +174,18 @@ Hug.prototype._parseFile = function(filepath, rootdir, subdir, filename){
 		replaceQueue = [];
 	
 	src = this._grunt.task.directive(filepath, this._grunt.file.read);
-	src = "(function(){\nvar exports = {};\n" + src + "\n __export(" + JSON.stringify(objPath) + ", exports);\n}());";
+	
+	contents = "(function(){\n";
+	contents += "var module = {};\n";
+	contents += "var exports = module.exports = {};\n";
+	contents += src;
+	contents += "\n__export(" + JSON.stringify(objPath) + ", module.exports || exports);\n}());";
 
 	if(!this._dependencyListMap[filepath]){
 		this._dependencyListMap[filepath] = [];
 	}
 	
-	while(dependencyMatch = dependencyFinder.exec(src)){
+	while(dependencyMatch = dependencyFinder.exec(contents)){
 		dependencyPath = stripslashes(dependencyMatch[1]);
 		
 		if(!dependencyPath){
@@ -198,10 +205,10 @@ Hug.prototype._parseFile = function(filepath, rootdir, subdir, filename){
 	replaceQueue.forEach(function(replaceObj){
 		var objectPath = getObjectPath(path.dirname(path.relative(rootdir, replaceObj.path)), replaceObj.path);
 		var importStatement = "__import(" + JSON.stringify(objectPath) + ")";
-		src = src.replace(replaceObj.match, importStatement);
+		contents = contents.replace(replaceObj.match, importStatement);
 	});
 
-	return src;
+	return contents;
 };
 
 Hug.prototype._setDependency = function(dependentPath, dependencyPath){
