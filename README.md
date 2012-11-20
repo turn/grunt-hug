@@ -1,13 +1,19 @@
 # grunt-contrib-hug [![Build Status](https://secure.travis-ci.org/ozanturgut/grunt-contrib-hug.png?branch=master)](http://travis-ci.org/ozanturgut/grunt-contrib-hug)
 
-Hug makes developing web applications easier. You provide a directory, grunt wraps them up in anonymous functions and concatinates them with dependency resolution in to a destination file.
+Hug makes developing web applications easier. You provide a directory, grunt generates one combined file, performing dependency resolution along the way. It's like concat, except you don't have to worry about the order of your files. It also keeps your namespaces clean by limiting the scope of variable declarations to file-level by wrapping each file in an anonymous self-executing function.
 
 ## Why Hugging Will Make You Happy
 
-* It scopes variable declarations to the file they're declared in (as in, they won't leak to the environment).
+* You just provider a root directory, grunt figures out how to concatinate them to fulfill dependency constraints.
+* Your file-level variables declarations will actually be scoped at file-level (they won't leak to the environment).
 * You can `require([relativePath])` other files to bring them into the current scope.
-* Concatination of your files with dependency resolution (done by paying attention to your `require` statements).
-* It can optionally generate one variable to encompasing your whole API.
+* You can optionally generate one variable to encompasing your entire API.
+
+## Target Audience
+
+Hugging occurs at build-time, so an application which needs to load it's dependencies at runtime (*lazy loading*) won't benefit from hugging -- you'll likely prefer the likes of [RequireJS](http://requirejs.org/). 
+
+For frameworks or compiled applications, hugging is awesome. Your code will be clean, safe, and boiler-plate-free. As an added benefit, your unhugged code will work in nodejs applications so long as you're not using any browser-specific functions.
 
 ## An Example
 
@@ -107,4 +113,6 @@ Note that you can't use the exportsVariable in the source code, you have to use 
 
 ## Known Limitations and Possibilities
 * You cannot `require` a file outside of your source tree. For third-party libraries use grunt `concat` to concatinate them ahead of the hug generated file. You'll also likely want to minify the generated file.
+* You cannot `require` packages a-la-npm.
 * You can set `exportsVariable` to `exports` and use the generated file in another source tree (which can then also be hugged) as a way to cleanly encapsulate your APIs.
+
