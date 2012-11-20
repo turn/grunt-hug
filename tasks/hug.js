@@ -1,12 +1,75 @@
 var path = require('path');
-var requireFinder = /(?:require\([\'||\""])(.*)[\'||\""]\)/gi;
 
-// Topological sorter based on Kahn's (1962) algorithm -- via Wikipedia
-var solveDependencies = function(dependencyListMap, dependerListMap){
-	var independents = [];
-	var resolved = [];
-	var node;
+// http://phpjs.org/functions/stripslashes/
+function stripslashes (str) {
+  return (str + '').replace(/\\(.?)/g, function (s, n1) {
+    switch (n1) {
+    case '\\':
+      return '\\';
+    case '0':
+      return '\u0000';
+    case '':
+      return '';
+    default:
+      return n1;
+    }
+  });
+}
+
+function getObjectPath(basedir, filename){
+	var objPath = [];
+
+	if(basedir){
+		basedir.split(path.sep).forEach(function(objName){
+			if(objName === "."){
+				return;	
+			}
+
+			objPath.push(objName);
+		});
+	}
 	
+	objPath.push(path.basename(filename, path.extname(filename)));
+
+	return objPath;
+}
+
+var Hug = function(grunt, options){
+	options = options || {};
+
+	this._grunt = grunt;
+	this._seperator = options.separator || grunt.utils.linefeed;
+	this._exportsVariable = options.exportsVariable;
+};
+
+module.exports = function(grunt){
+	grunt.registerMultiTask('hug', 'Wrap client-side files in anonymous functions, and concatenate with dependency solving', function(){
+		var srcDir = this.data.src,
+			destPath = this.file.dest;
+		
+		var hug = new Hug(grunt, {
+			separator: this.data.separator || grunt.utils.linefeed,
+			exportsVariable: this.data.exportsVariable
+		});
+		var destSource = hug.parse(srcDir);
+		
+		grunt.file.write(destPath, destSource);
+		if (this.errorCount) { return false; }
+
+		grunt.log.writeln('File "' + destPath + '" created.');
+	});
+};
+
+// Kahn's toposort
+Hug.prototype._solveDependencies = function(){
+	var dependencyListMap = this._dependencyListMap,
+		dependentListMap = this._dependentListMap,
+		independents = [],
+		resolved = [],
+		node,
+		nodeDependencies,
+		dependencyPath;
+
 	for(node in dependencyListMap){
 		if(dependencyListMap.hasOwnProperty(node)){
 			if(dependencyListMap[node].length === 0){
@@ -14,18 +77,20 @@ var solveDependencies = function(dependencyListMap, dependerListMap){
 			}
 		}
 	}
-	
-	var nodeDependencies, dependency;
 
 	while(node = independents.pop()){
 		resolved.push(node);
 
-		nodeDependencies = dependerListMap[node];
-		while(dependency = nodeDependencies.pop()){
-			dependencyListMap[dependency].splice(dependencyListMap[dependency].indexOf(node),1);
+		nodeDependencies = dependentListMap[node];
+		if(!nodeDependencies){
+			continue;
+		}
+
+		while(dependencyPath = nodeDependencies.pop()){
+			dependencyListMap[dependencyPath].splice(dependencyListMap[dependencyPath].indexOf(node),1);
 			
-			if(dependencyListMap[dependency].length === 0){
-				independents.push(dependency);
+			if(dependencyListMap[dependencyPath].length === 0){
+				independents.push(dependencyPath);
 			}
 		}
 	}
@@ -33,103 +98,116 @@ var solveDependencies = function(dependencyListMap, dependerListMap){
 	return resolved;
 };
 
-var hug = module.exports = function(grunt){
-	grunt.registerMultiTask('hug', 'Wrap client-side files in anonymous functions.', function(){
-		var srcDir = this.data.src,
-			destPath = this.file.dest,
-			separator = this.data.separator || grunt.utils.linefeed,
-			dependerListMap = {},
-			dependencyListMap = {},
-			moduleIdMap = {},
-			moduleIdCounter = 0,
-			sources = {},
-			destSource = [];
-		
-		function resolveDependencies(baseDir, filename, src){
-			var requireMatch, 
-				dependencyList = [],
-				dependerList,
-				moduleId,
-				requiredPath,
-				filePath =path.resolve(path.join(baseDir,filename)),
-				replaceQueue = [];
+Hug.prototype.DEPENDENCY_FINDER = /require\([\'||\"](.*)[\'||\"]\)/gi; //'
 
-			if(!dependerListMap[filePath]){
-				dependerListMap[filePath] = [];
-			}
+Hug.prototype.parse = function(dir){
+	var self = this,
+		resolvedDependencies,
+		sourceMap = {},
+		sourceList = [];
 
-			if(!moduleIdMap[filePath]){
-				moduleIdMap[filePath] = ++moduleIdCounter;
-			}
-			
-			src = "(function(){\nvar exports = {};\n" + src + "\n__module" + moduleIdMap[filePath] + " = exports;\n}());";
+	this._dependentListMap = {};
+	this._dependencyListMap = {};
 
-			while(requireMatch = requireFinder.exec(src)){
-				requiredPath = requireMatch[1];
-				if(!requiredPath){
-					continue;	
-				} 
-
-				requiredPath = path.resolve(path.join(baseDir, requiredPath));
-				moduleId = moduleIdMap[requiredPath] || (moduleIdMap[requiredPath] = ++moduleIdCounter);		
-				dependerList = dependerListMap[requiredPath] || (dependerListMap[requiredPath] = []);
-				dependerList.push(filePath);
-				dependencyList.push(requiredPath);
-				replaceQueue.push({
-					match: requireMatch[0],
-					replacement: '__module' + moduleId
-				});
-			}
-
-			replaceQueue.forEach(function(replaceObj){
-				src = src.replace(replaceObj.match, replaceObj.replacement);
-			});
-
-			dependencyListMap[filePath] = dependencyList;
-			sources[filePath] = src;
-
-			return src;
-		}
-		
-		grunt.file.recurse(srcDir, function(filepath, rootdir, subdir, filename){
-			var baseDir = path.join(rootdir, subdir),
-				src = grunt.task.directive(filepath, grunt.file.read);
-			resolveDependencies(baseDir, filename, src);
-		});
-
-		var resolved = solveDependencies(dependencyListMap, dependerListMap);
-		
-		var header = "(function(){\n";
-		var footer = "\n}());";
-		var moduleVars = [];
-
-		var filePath;
-		for(filePath in moduleIdMap){
-			if(moduleIdMap.hasOwnProperty(filePath)){
-				moduleVars.push("__module" + moduleIdMap[filePath]);
-			}
-		}
-
-		if(moduleVars.length > 0){
-			header += "var " + moduleVars.join(', ') + ";\n";
-		}
-
-		destSource.push(header);
-
-		resolved.forEach(function(filePath){
-			destSource.push(sources[filePath]);
-		});
-
-		destSource.push(footer);
-
-		destSource = destSource.join(grunt.utils.normalizelf(separator));
-
-		grunt.file.write(destPath, destSource);
-
-		if (this.errorCount) { return false; }
-
-		grunt.log.writeln('File "' + destPath + '" created.');
+	this._grunt.file.recurse(dir, function(filepath, rootdir, subdir, filename){
+		filepath = path.resolve(filepath);
+		sourceMap[filepath] = self._parseFile(filepath, rootdir, subdir, filename);
 	});
+
+	resolvedDependencies = this._solveDependencies();
+	resolvedDependencies.forEach(function(filepath){
+		sourceList.push(sourceMap[filepath]);
+	});
+
+	return this._prepare(sourceList);
 };
 
+Hug.prototype._prepare = function(sources){
+	var sourceList = [];
 
+	var header = "";
+	if(this._exportsVariable){
+		header += this._exportsVariable + " = ";
+	}
+
+	header += "(function(){\n";
+	header += "var exports = {};\n";
+	header += "var __export = function(objectPath, data){\n";
+	header += "		var curObj = exports, objName, index = 0, length = objectPath.length - 1;\n";
+	header += "		for(;index < length; index++){\n";
+	header += "			objName = objectPath[index];\n";
+	header += "			curObj = curObj[objName] || (curObj[objName] = {});\n";
+	header += "		}\n";
+	header += "		curObj[objectPath[index]] = data;\n";
+	header += "};\n";
+	header += "var __import = function(objectPath){\n";
+	header += "		var curObj = exports, objName, index = 0, length = objectPath.length;\n";
+	header += "		for(;index < length; index++){\n";
+	header += "			objName = objectPath[index];\n";
+	header += "			curObj = curObj[objName];\n";
+	header += "			if(curObj === void 0) return;\n";
+	header += "		}\n";
+	header += "		return curObj;\n";
+	header += "};\n";
+
+	var footer = "\nreturn exports;\n";
+	footer += "}());\n";
+	sourceList.push(header);
+
+	sources.forEach(function(source){
+		sourceList.push(source);
+	});
+
+	sourceList.push(footer);
+
+	return sourceList.join(this._grunt.utils.normalizelf(this._grunt.utils.linefeed));
+};
+
+Hug.prototype._parseFile = function(filepath, rootdir, subdir, filename){
+	var src,
+		dependencyMatch, 
+		dependencyPath,
+		dependencyFinder = this.DEPENDENCY_FINDER,
+		objPath = getObjectPath(subdir, filename),
+		replaceQueue = [];
+	
+	src = this._grunt.task.directive(filepath, this._grunt.file.read);
+	src = "(function(){\nvar exports = {};\n" + src + "\n __export(" + JSON.stringify(objPath) + ", exports);\n}());";
+
+	if(!this._dependencyListMap[filepath]){
+		this._dependencyListMap[filepath] = [];
+	}
+	
+	while(dependencyMatch = dependencyFinder.exec(src)){
+		dependencyPath = stripslashes(dependencyMatch[1]);
+		
+		if(!dependencyPath){
+			continue;	
+		} 
+
+		dependencyPath = path.resolve(path.join(rootdir, subdir, dependencyPath));
+		
+		this._setDependency(filepath, dependencyPath);
+
+		replaceQueue.push({
+			match: dependencyMatch[0],
+			path: dependencyPath
+		});
+	}
+	
+	replaceQueue.forEach(function(replaceObj){
+		var objectPath = getObjectPath(path.dirname(path.relative(rootdir, replaceObj.path)), replaceObj.path);
+		var importStatement = "__import(" + JSON.stringify(objectPath) + ")";
+		src = src.replace(replaceObj.match, importStatement);
+	});
+
+	return src;
+};
+
+Hug.prototype._setDependency = function(dependentPath, dependencyPath){
+	var dependentList = this._dependentListMap[dependencyPath] || (this._dependentListMap[dependencyPath] = []);
+	dependentList.push(dependentPath);
+
+	var dependencyList = this._dependencyListMap[dependentPath] || (this._dependencyListMap[dependentPath] = []);
+	dependencyList.push(dependencyPath);
+};

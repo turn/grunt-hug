@@ -47,7 +47,8 @@ module.exports = function(grunt) {
     hug: {
       test: {
         src: "./test/fixtures",
-        dest: "./tmp/test.js"
+        dest: "./tmp/test.js",
+        exportsVariable: "theGlobal"
       }
     },
 
