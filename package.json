@@ -1,6 +1,6 @@
 {
   "name": "grunt-contrib-hug",
-  "description": "Wraps your JavaScript files with anonymous functions then concatenates them with dependency resolution.",
+  "description": "Scopes your variable declarations to the file they're declared in and then concatenates files with dependency resolution.",
   "version": "0.1.0",
   "homepage": "https://github.com/ozanturgut/grunt-contrib-hug",
   "author": {
