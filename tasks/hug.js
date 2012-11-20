@@ -1,5 +1,4 @@
 var path = require('path');
-
 var requireFinder = /(?:require\([\'||\""])(.*)[\'||\""]\)/gi;
 
 // Topological sorter based on Kahn's (1962) algorithm -- via Wikipedia
@@ -14,7 +13,7 @@ var solveDependencies = function(dependencyListMap, dependerListMap){
 				independents.push(node);
 			}
 		}
-	};
+	}
 	
 	var nodeDependencies, dependency;
 
@@ -34,13 +33,13 @@ var solveDependencies = function(dependencyListMap, dependerListMap){
 	return resolved;
 };
 
-var gruntHug = module.exports = function(grunt){
+var hug = module.exports = function(grunt){
 	grunt.registerMultiTask('hug', 'Wrap client-side files in anonymous functions.', function(){
 		var srcDir = this.data.src,
 			destPath = this.file.dest,
 			separator = this.data.separator || grunt.utils.linefeed,
 			dependerListMap = {},
-			dependencyListMap = {};
+			dependencyListMap = {},
 			moduleIdMap = {},
 			moduleIdCounter = 0,
 			sources = {},
@@ -48,23 +47,31 @@ var gruntHug = module.exports = function(grunt){
 		
 		function resolveDependencies(baseDir, filename, src){
 			var requireMatch, 
-				requirePath, 
 				dependencyList = [],
+				dependerList,
 				moduleId,
+				requiredPath,
 				filePath =path.resolve(path.join(baseDir,filename)),
 				replaceQueue = [];
 
-			if(!dependerListMap[filePath]) dependerListMap[filePath] = [];
-			if(!moduleIdMap[filePath]) moduleIdMap[filePath] = moduleIdCounter++;		
+			if(!dependerListMap[filePath]){
+				dependerListMap[filePath] = [];
+			}
+
+			if(!moduleIdMap[filePath]){
+				moduleIdMap[filePath] = ++moduleIdCounter;
+			}
 			
 			src = "(function(){\nvar exports = {};\n" + src + "\n__module" + moduleIdMap[filePath] + " = exports;\n}());";
 
 			while(requireMatch = requireFinder.exec(src)){
-				requirePath = requireMatch[1];
-				if(!requirePath) continue;
+				requiredPath = requireMatch[1];
+				if(!requiredPath){
+					continue;	
+				} 
 
-				requiredPath = path.resolve(path.join(baseDir, requirePath));
-				moduleId = moduleIdMap[requiredPath] || (moduleIdMap[requiredPath] = moduleIdCounter++);		
+				requiredPath = path.resolve(path.join(baseDir, requiredPath));
+				moduleId = moduleIdMap[requiredPath] || (moduleIdMap[requiredPath] = ++moduleIdCounter);		
 				dependerList = dependerListMap[requiredPath] || (dependerListMap[requiredPath] = []);
 				dependerList.push(filePath);
 				dependencyList.push(requiredPath);
@@ -72,7 +79,7 @@ var gruntHug = module.exports = function(grunt){
 					match: requireMatch[0],
 					replacement: '__module' + moduleId
 				});
-			};
+			}
 
 			replaceQueue.forEach(function(replaceObj){
 				src = src.replace(replaceObj.match, replaceObj.replacement);
@@ -82,7 +89,7 @@ var gruntHug = module.exports = function(grunt){
 			sources[filePath] = src;
 
 			return src;
-		};
+		}
 		
 		grunt.file.recurse(srcDir, function(filepath, rootdir, subdir, filename){
 			var baseDir = path.join(rootdir, subdir),
@@ -91,10 +98,12 @@ var gruntHug = module.exports = function(grunt){
 		});
 
 		var resolved = solveDependencies(dependencyListMap, dependerListMap);
-		console.log(resolved);
+		
 		var header = "(function(){\n";
 		var footer = "\n}());";
 		var moduleVars = [];
+
+		var filePath;
 		for(filePath in moduleIdMap){
 			if(moduleIdMap.hasOwnProperty(filePath)){
 				moduleVars.push("__module" + moduleIdMap[filePath]);
@@ -117,8 +126,10 @@ var gruntHug = module.exports = function(grunt){
 
 		grunt.file.write(destPath, destSource);
 
-	    if (this.errorCount) { return false; }
+		if (this.errorCount) { return false; }
 
-	    grunt.log.writeln('File "' + destPath + '" created.');
+		grunt.log.writeln('File "' + destPath + '" created.');
 	});
 };
+
+
