@@ -4,7 +4,7 @@ Hug makes developing web applications easier. You provide a directory, grunt gen
 
 ## Why Hugging Will Make You Happy
 
-* You just provider a root directory, grunt figures out how to concatinate them to fulfill dependency constraints.
+* You provide a root directory, grunt figures out how to concatinate your files to fulfill dependency constraints.
 * Your file-level variables declarations will actually be scoped at file-level (they won't leak to the environment).
 * You can `require([relativePath])` other files to bring them into the current scope.
 * You can optionally generate one variable to encompasing your entire API.
