@@ -40,16 +40,18 @@ var Hug = function(grunt, options){
 	this._grunt = grunt;
 	this._seperator = options.separator || grunt.utils.linefeed;
 	this._exportsVariable = options.exportsVariable;
+	this._header = options.header;
 };
 
 module.exports = function(grunt){
 	grunt.registerMultiTask('hug', 'Wrap client-side files in anonymous functions, and concatenate with dependency solving', function(){
 		var srcDir = this.data.src,
 			destPath = this.file.dest;
-		
+	
 		var hug = new Hug(grunt, {
 			separator: this.data.separator || grunt.utils.linefeed,
-			exportsVariable: this.data.exportsVariable
+			exportsVariable: this.data.exportsVariable,
+			header: this.data.header
 		});
 		var destSource = hug.parse(srcDir);
 		
@@ -108,8 +110,15 @@ Hug.prototype.parse = function(dir){
 
 	this._dependentListMap = {};
 	this._dependencyListMap = {};
+	this._moduleIdCounter = 0;
+	this._moduleIds = {};
+	this._moduleMap = {};
 
 	this._grunt.file.recurse(dir, function(filepath, rootdir, subdir, filename){
+		if(filepath === self._header){
+			return;	
+		} 
+
 		filepath = path.resolve(filepath);
 		sourceMap[filepath] = self._parseFile(filepath, rootdir, subdir, filename);
 	});
@@ -123,7 +132,9 @@ Hug.prototype.parse = function(dir){
 };
 
 Hug.prototype._prepare = function(sources){
-	var sourceList = [];
+	var self = this,
+		sourceList = [],
+		headerFilepath;
 
 	var header = "";
 	if(this._exportsVariable){
@@ -131,28 +142,18 @@ Hug.prototype._prepare = function(sources){
 	}
 
 	header += "(function(){\n";
-	header += "var module = {};\n";
-	header += "var exports = {};\n";
-	header += "var __export = function(objectPath, data){\n";
-	header += "		var curObj = exports, objName, index = 0, length = objectPath.length - 1;\n";
-	header += "		for(;index < length; index++){\n";
-	header += "			objName = objectPath[index];\n";
-	header += "			curObj = curObj[objName] || (curObj[objName] = {});\n";
-	header += "		}\n";
-	header += "		curObj[objectPath[index]] = data;\n";
-	header += "};\n";
-	header += "var __import = function(objectPath){\n";
-	header += "		var curObj = exports, objName, index = 0, length = objectPath.length;\n";
-	header += "		for(;index < length; index++){\n";
-	header += "			objName = objectPath[index];\n";
-	header += "			curObj = curObj[objName];\n";
-	header += "			if(curObj === void 0) return;\n";
-	header += "		}\n";
-	header += "		return curObj;\n";
-	header += "};\n";
+	
+	if(this._header){
+		this._header.forEach(function(filepath){
+			filepath = path.resolve(filepath);
+			header += self._grunt.task.directive(filepath, self._grunt.file.read) + "\n";
+		});
+	}
 
-	var footer = "\nreturn module.exports || exports;\n";
+	var footer = "\n";
+	footer += "return " + JSON.stringify(this._moduleMap).replace(/("::)|(::")/g, '') + ";\n";
 	footer += "}());\n";
+
 	sourceList.push(header);
 
 	sources.forEach(function(source){
@@ -165,21 +166,26 @@ Hug.prototype._prepare = function(sources){
 };
 
 Hug.prototype._parseFile = function(filepath, rootdir, subdir, filename){
-	var contents,
+	var self = this,
+		contents,
 		src,
+		moduleId = this.getModuleId(filepath),
 		dependencyMatch, 
 		dependencyPath,
 		dependencyFinder = this.DEPENDENCY_FINDER,
 		objPath = getObjectPath(subdir, filename),
 		replaceQueue = [];
 	
+	this._registerModule(moduleId, subdir, filename);
+
 	src = this._grunt.task.directive(filepath, this._grunt.file.read);
 	
-	contents = "(function(){\n";
+	contents = "var __module" + moduleId + " = (function(){\n";
 	contents += "var module = {};\n";
 	contents += "var exports = {};\n";
 	contents += src;
-	contents += "\n__export(" + JSON.stringify(objPath) + ", module.exports || exports);\n}());";
+	contents += "\nreturn module.exports || exports;\n";
+	contents += "}());";
 
 	if(!this._dependencyListMap[filepath]){
 		this._dependencyListMap[filepath] = [];
@@ -203,12 +209,38 @@ Hug.prototype._parseFile = function(filepath, rootdir, subdir, filename){
 	}
 	
 	replaceQueue.forEach(function(replaceObj){
-		var objectPath = getObjectPath(path.dirname(path.relative(rootdir, replaceObj.path)), replaceObj.path);
-		var importStatement = "__import(" + JSON.stringify(objectPath) + ")";
+		//var objectPath = getObjectPath(path.dirname(path.relative(rootdir, replaceObj.path)), replaceObj.path);
+		var importStatement = "__module" + self.getModuleId(replaceObj.path);
 		contents = contents.replace(replaceObj.match, importStatement);
 	});
 
 	return contents;
+};
+
+Hug.prototype.getModuleId = function(path){
+	return this._moduleIds[path] || this._createModuleId(path);
+};
+
+Hug.prototype._createModuleId = function(path){
+	var moduleId = this._moduleIds[path] = this._moduleIdCounter++;
+	return moduleId;
+};
+
+Hug.prototype._registerModule = function(moduleId, basedir, filename){
+	var currentPackage = this._moduleMap,
+		currentPackageName = "",
+		moduleName = path.basename(filename, path.extname(filename)),
+		objectPath = getObjectPath(basedir, filename),
+		index = 0,
+		length = objectPath.length - 1;
+		
+	for(;index < length; index++){
+		currentPackageName = objectPath[index];
+		currentPackage = currentPackage[currentPackageName] || (currentPackage[currentPackageName] = {});
+	}
+
+	// The colons are added for a string replace to remove JSON quoting
+	currentPackage[objectPath[index]] = "::__module" + moduleId + "::";
 };
 
 Hug.prototype._setDependency = function(dependentPath, dependencyPath){
