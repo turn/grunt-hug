@@ -6,7 +6,6 @@ var TEST_FILE_PATH = path.resolve(path.dirname(module.filename), '../tmp/test.js
 
 exports.hug = {
 	test: function(test){
-		console.log('\nTest file: ' + TEST_FILE_PATH);
 		var expect = {
 			an_env_variable: 'hello, world!',
 			theGlobal: {
@@ -25,7 +24,9 @@ exports.hug = {
 		
 		var env = {};
 		try {
-			vm.runInNewContext(fs.readFileSync(TEST_FILE_PATH), env);
+			var src = fs.readFileSync(TEST_FILE_PATH);
+			console.log(src);
+			vm.runInNewContext(src, env);
 		} catch(e) {
 			if (e.name === 'SyntaxError') {
 				console.error('Syntax error in file!\n' + e.message);
