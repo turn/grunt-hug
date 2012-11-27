@@ -6,6 +6,7 @@ var TEST_FILE_PATH = path.resolve(path.dirname(module.filename), '../tmp/test.js
 
 exports.hug = {
 	test: function(test){
+		console.log('\nTest file: ' + TEST_FILE_PATH);
 		var expect = {
 			an_env_variable: 'hello, world!',
 			theGlobal: {
