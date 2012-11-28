@@ -47,7 +47,7 @@ module.exports = function(grunt){
 	grunt.registerMultiTask('hug', 'Wrap client-side files in anonymous functions, and concatenate with dependency solving', function(){
 		var srcDir = this.data.src,
 			destPath = this.file.dest;
-	
+		
 		var hug = new Hug(grunt, {
 			separator: this.data.separator || grunt.utils.linefeed,
 			exportsVariable: this.data.exportsVariable,
@@ -158,7 +158,7 @@ Hug.prototype._prepare = function(sources){
 	header += "(function(){\n";
 	
 	if(this._header){
-		this._header.forEach(function(filepath){
+		this._grunt.file.expand(this._header).forEach(function(filepath){
 			filepath = path.resolve(filepath);
 			header += self._grunt.task.directive(filepath, self._grunt.file.read) + "\n";
 		});
