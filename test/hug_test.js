@@ -25,7 +25,6 @@ exports.hug = {
 		var env = {};
 		try {
 			var src = fs.readFileSync(TEST_FILE_PATH);
-			console.log(src.toString());
 			vm.runInNewContext(src, env);
 		} catch(e) {
 			if (e.name === 'SyntaxError') {

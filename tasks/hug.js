@@ -70,7 +70,9 @@ Hug.prototype._solveDependencies = function(){
 		resolved = [],
 		node,
 		nodeDependencies,
-		dependencyPath;
+		dependencyList,
+		dependencyPath,
+		unresolved = [];
 
 	for(node in dependencyListMap){
 		if(dependencyListMap.hasOwnProperty(node)){
@@ -82,21 +84,32 @@ Hug.prototype._solveDependencies = function(){
 
 	while(node = independents.pop()){
 		resolved.push(node);
-
 		nodeDependencies = dependentListMap[node];
 		if(!nodeDependencies){
 			continue;
 		}
 
 		while(dependencyPath = nodeDependencies.pop()){
-			dependencyListMap[dependencyPath].splice(dependencyListMap[dependencyPath].indexOf(node),1);
-			
-			if(dependencyListMap[dependencyPath].length === 0){
+			dependencyList = dependencyListMap[dependencyPath];
+			dependencyList.splice(dependencyList.indexOf(node),1);
+			if(dependencyList.length === 0){
 				independents.push(dependencyPath);
 			}
 		}
 	}
-	
+
+	for(node in dependencyListMap){
+		if(dependencyListMap.hasOwnProperty(node)){
+			if(dependencyListMap[node].length !== 0){
+				unresolved.push(node);
+			}
+		}
+	}
+
+	if(unresolved.length > 0){
+		this._grunt.fail.warn('Unable to resolve dependency map, you may have circular dependencies or typos in required filenames in the following files: \n\t' + unresolved.join('\n\t') + "\n");
+	}
+
 	return resolved;
 };
 
@@ -115,15 +128,16 @@ Hug.prototype.parse = function(dir){
 	this._moduleMap = {};
 
 	this._grunt.file.recurse(dir, function(filepath, rootdir, subdir, filename){
-		if(filepath === self._header){
+		if(path.extname(filepath) !== '.js' || (self._header && self._header.indexOf(filepath) !== -1)){
 			return;	
-		} 
-
+		}
+		
 		filepath = path.resolve(filepath);
 		sourceMap[filepath] = self._parseFile(filepath, rootdir, subdir, filename);
 	});
 
 	resolvedDependencies = this._solveDependencies();
+	
 	resolvedDependencies.forEach(function(filepath){
 		sourceList.push(sourceMap[filepath]);
 	});
