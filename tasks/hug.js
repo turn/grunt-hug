@@ -196,7 +196,7 @@ Hug.prototype._parseFile = function(filepath, rootdir, subdir, filename){
 	
 	contents = "var __module" + moduleId + " = (function(){\n";
 	contents += "var module = {};\n";
-	contents += "var exports = {};\n";
+	contents += "var exports = module.exports = {};\n";
 	contents += src;
 	contents += "\nreturn module.exports || exports;\n";
 	contents += "}());";
@@ -232,7 +232,12 @@ Hug.prototype._parseFile = function(filepath, rootdir, subdir, filename){
 };
 
 Hug.prototype.getModuleId = function(path){
-	return this._moduleIds[path] || this._createModuleId(path);
+	var moduleId = this._moduleIds[path];
+	if(moduleId === void 0){
+		moduleId = this._createModuleId(path);
+	}
+	
+	return moduleId;
 };
 
 Hug.prototype._createModuleId = function(path){
