@@ -6,6 +6,7 @@ Hug makes developing web applications easier. You provide a directory, grunt gen
 
 * You provide a root directory, grunt figures out how to concatinate your files to fulfill dependency constraints.
 * Your file-level variables declarations will actually be scoped at file-level (they won't leak to the environment).
+* It'll make your minified files smaller because it explicitly defines what the external api will be (and therefore anything not in the external api can be safely renamed to something shorted during minifaction).
 * You can `require([relativePath])` other files to bring them into the current scope.
 * You can optionally generate one variable encompasing your entire API.
 
@@ -20,7 +21,46 @@ You likely depend on external libraries. Here two approaches you can take to imp
 * Some libraries automatically bind to an exports variable if it exists (ex: jQuery, Underscore), these can be treated like any other file in your package by using ```require()``` to bring them in to scope.
 * Libraries which declare a var or introduce a global variable can be added to the ```header``` of the package. The header is prepended to the package and the entire package is wrapped in an anonymous function, so if all the library does is declare variables, those variables will become package-level variables.
 
-## An Example
+## Simple Example
+Say I have two files:
+``` javascript
+// file1.js 
+exports.word1 = "hello";
+exports.word2 = "world";
+```
+``` javascript
+// file2.js
+var file1Exports = require('./file1.js');
+console.log(file1Exports.word1 + " " + file1Exports.word2);
+```
+When these files run through hug, this will be the generated file:
+``` javascript
+(function(){
+	var __module0 = (function(){
+		var module = {};
+		var exports = module.exports = {};
+		
+		exports.word1 = "hello";
+		exports.word2 = "world";
+		
+		return module.exports || exports;
+	}());
+	
+	var __module1 = (function(){
+		var module = {};
+		var exports = module.exports = {};
+	
+		var file1Exports = __module0;
+		console.log(file1Exports.word1 + " " + file1Exports.word2);
+		
+		return module.exports || exports;
+	}());
+	
+	return {"file1":__module0,"file2":__module1};
+}());
+```
+
+## Complex Example
 
 Say I have the following file structure:
 ```
