@@ -7,13 +7,18 @@ Hug makes developing web applications easier. You provide a directory, grunt gen
 * You provide a root directory, grunt figures out how to concatinate your files to fulfill dependency constraints.
 * Your file-level variables declarations will actually be scoped at file-level (they won't leak to the environment).
 * You can `require([relativePath])` other files to bring them into the current scope.
-* You can optionally generate one variable to encompasing your entire API.
+* You can optionally generate one variable encompasing your entire API.
 
 ## Target Audience
 
-Hugging occurs at build-time, so an application which needs to load it's dependencies at runtime (*lazy loading*) won't benefit from hugging -- you'll likely prefer the likes of [RequireJS](http://requirejs.org/). 
+Hugging occurs at build-time, so an application which needs to load it's dependencies at runtime (lazy loading) won't benefit much from hugging -- you'll likely prefer the likes of [RequireJS](http://requirejs.org/). 
 
 For frameworks or compiled applications, hugging is awesome. Your code will be clean, safe, and boiler-plate-free. As an added benefit, your unhugged code will work in nodejs applications so long as you're not using any browser-specific functions.
+
+## Importing libraries
+You likely depend on external libraries. Here two approaches you can take to import import them into Hug:
+* Some libraries automatically bind to an exports variable if it exists (ex: jQuery, Underscore), these can be treated like any other file in your package by using ```require()``` to bring them in to scope.
+* Libraries which declare a var or introduce a global variable can be added to the ```header``` of the package. The header is prepended to the package and the entire package is wrapped in an anonymous function, so if all the library does is declare variables, those variables will become package-level variables.
 
 ## An Example
 
@@ -88,6 +93,10 @@ This defines the root directory of your source tree. Any JS file under this dire
 
 This defines what the path for the generated file should be. Grunt will automatically generate directories if they don't exit.
 
+##### (optional) header ```file list```
+
+A list of files to prepend to the package. These files are not wrapped in anonymous functions, so any variables that are declared will be visible to the entire package. This is a good choice for utility functions or libraries which don't support exporting their variables.
+
 ##### (optional) exportsVariable ```string```
 
 This is an optional parameter. If provided, the generated file will produce a global variable with the given name holding the export tree. For example, if we had set `exportsVariable: 'hugExample'` for the example above, and ran the generated script, we would end up with a global variable like this:
@@ -113,6 +122,5 @@ Note that you can't use the exportsVariable in the source code, you have to use 
 
 ## Known Limitations and Possibilities
 * You cannot `require` a file outside of your source tree. For third-party libraries use grunt `concat` to concatinate them ahead of the hug generated file. You'll also likely want to minify the generated file.
-* You cannot `require` packages a-la-npm.
 * You can set `exportsVariable` to `exports` and use the generated file in another source tree (which can then also be hugged) as a way to cleanly encapsulate your APIs.
 
