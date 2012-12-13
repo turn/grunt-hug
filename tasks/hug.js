@@ -165,7 +165,9 @@ Hug.prototype._prepare = function(sources){
 	}
 
 	var footer = "\n";
-	footer += "return " + JSON.stringify(this._moduleMap).replace(/("::)|(::")/g, '') + ";\n";
+	if(this._exportsVariable){
+		footer += "return " + JSON.stringify(this._moduleMap).replace(/("::)|(::")/g, '') + ";\n";
+	}
 	footer += "}());\n";
 
 	sourceList.push(header);

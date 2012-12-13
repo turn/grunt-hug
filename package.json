@@ -1,7 +1,7 @@
 {
   "name": "grunt-contrib-hug",
   "description": "Scopes your variable declarations to the file they're declared in and then concatenates files with dependency resolution.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "homepage": "https://github.com/ozanturgut/grunt-contrib-hug",
   "author": {
     "name": "Ozan Turgut",
