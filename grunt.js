@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2012 Ozan Turgut
  * Licensed under the MIT license.
- * https://github.com/ozanturgut/grunt-contrib-hug/blob/master/LICENSE-MIT
+ * https://github.com/ozanturgut/grunt-hug/blob/master/LICENSE-MIT
  */
 
 module.exports = function(grunt) {
@@ -13,7 +13,7 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     test_vars: {
-      name: 'grunt-contrib-hug',
+      name: 'grunt-hug',
       version: '0.1.0'
     },
 

@@ -1,4 +1,4 @@
-# grunt-contrib-hug [![Build Status](https://secure.travis-ci.org/ozanturgut/grunt-contrib-hug.png?branch=master)](http://travis-ci.org/ozanturgut/grunt-contrib-hug)
+# grunt-hug [![Build Status](https://secure.travis-ci.org/ozanturgut/grunt-hug.png?branch=master)](http://travis-ci.org/ozanturgut/grunt-hug)
 
 Hug makes developing web applications easier. You provide a directory, grunt generates one combined file, performing dependency resolution along the way. It's like concat, except you don't have to worry about the order of your files. It also keeps your namespaces clean by limiting the scope of variable declarations to file-level by wrapping each file in an anonymous self-executing function.
 

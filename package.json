@@ -1,23 +1,23 @@
 {
-  "name": "grunt-contrib-hug",
+  "name": "grunt-hug",
   "description": "Scopes your variable declarations to the file they're declared in and then concatenates files with dependency resolution.",
   "version": "0.2.3",
-  "homepage": "https://github.com/ozanturgut/grunt-contrib-hug",
+  "homepage": "https://github.com/ozanturgut/grunt-hug",
   "author": {
     "name": "Ozan Turgut",
     "url": "http://oztu.org/"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/ozanturgut/grunt-contrib-hug.git"
+    "url": "git://github.com/ozanturgut/grunt-hug.git"
   },
   "bugs": {
-    "url": "https://github.com/ozanturgut/grunt-contrib-hug/issues"
+    "url": "https://github.com/ozanturgut/grunt-hug/issues"
   },
   "licenses": [
     {
       "type": "MIT",
-      "url": "https://github.com/ozanturgut/grunt-contrib-hug/blob/master/LICENSE-MIT"
+      "url": "https://github.com/ozanturgut/grunt-hug/blob/master/LICENSE-MIT"
     }
   ],
   "main": "grunt.js",
