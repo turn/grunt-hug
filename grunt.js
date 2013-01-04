@@ -46,12 +46,12 @@ module.exports = function(grunt) {
     // Configuration to be run (and then tested).
     hug: {
       test: {
-        src: "./test/fixtures",
+        src: "./test/fixtures/**/*",
         dest: "./tmp/test.js",
         exportsVariable: "theGlobal"
       },
       example: {
-        src: "./example",
+        src: "./example/**/*",
         dest: "./tmp/example.js"
       }
     },
