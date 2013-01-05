@@ -16,8 +16,8 @@
   },
   "licenses": [
     {
-      "type": "MIT",
-      "url": "https://github.com/ozanturgut/grunt-hug/blob/master/LICENSE-MIT"
+      "type": "Apache License 2.0",
+      "url": "https://github.com/ozanturgut/grunt-hug/blob/master/LICENSE-APACHE2"
     }
   ],
   "main": "grunt.js",
