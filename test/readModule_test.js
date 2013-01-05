@@ -12,12 +12,13 @@ exports.hug = {
 				getId: sinon.stub().returns("__m0")
 			};
 		
-		var result = readModule.fulfillRequirements(src, srcPath, dependencyManager);
+		var dependencyFinder = new RegExp("require\\([\'|\"](.*)[\'|\"]\\)","gi");
+		var result = readModule.fulfillRequirements(src, srcPath, dependencyManager, dependencyFinder);
 
 		test.ok(dependencyManager.getId.calledWith(srcPath), "get id");
 		test.ok(dependencyManager.add.calledWith(srcPath, srcPath), "add");
 		test.equal(result, "__m0", "requirements fulfilled");
-		
+
 		test.done();
 	}
 };

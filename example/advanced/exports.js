@@ -1,2 +1,2 @@
-exports.speaker = require('./language/speaker.js');
-exports.aSaying = require('./language/message/aSaying.js');
+exports.speak = require('./speak.js');
+exports.message = require('./language/message/aSaying.js').whatTheySay;

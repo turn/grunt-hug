@@ -1,3 +1,3 @@
-var req = require('required.js');
+var otherFile = require('required.js');
 
-alert(req);
+alert(otherFile.message);

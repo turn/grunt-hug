@@ -1,4 +1,4 @@
 var theWord = require('../words.js').aWord;
-var speaker = require('../speaker.js');
+var composer = require('../composer.js');
 
-exports.whatTheySay = speaker(theWord);
+exports.whatTheySay = composer(theWord);

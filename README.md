@@ -1,166 +1,222 @@
 # grunt-hug [![Build Status](https://secure.travis-ci.org/ozanturgut/grunt-hug.png?branch=master)](http://travis-ci.org/ozanturgut/grunt-hug)
 
-Hug makes developing web applications easier. You provide a directory, grunt generates one combined file, performing dependency resolution along the way. It's like concat, except you don't have to worry about the order of your files. It also keeps your namespaces clean by limiting the scope of variable declarations to file-level by wrapping each file in an anonymous self-executing function.
+Hug makes maintaining and packaging web applications easier, it is a [grunt](http://gruntjs.com) plugin. 
+Tell it how to find your files and it will concatinate them in the right order of dependencies. 
+It will also prevent accidental variable leakage between files by wrapping each file in a self-executing 
+anonymous function.
 
 ## Why Hugging Will Make You Happy
 
-* You provide a root directory, grunt figures out how to concatinate your files to fulfill dependency constraints.
-* Your file-level variables declarations will actually be scoped at file-level (they won't leak to the environment).
-* It'll make your minified files smaller because it explicitly defines what the external api will be (and therefore anything not in the external api can be safely renamed to something shorted during minifaction).
-* You can `require([relativePath])` other files to bring them into the current scope.
-* You can optionally generate one variable encompasing your entire API.
+* **Automated dependency resolution.** It will figure out the required order for your files when concatinating.
+* **File-level variables** declarations won't leak to the environment and will remain at file-level.
+* Allows you to **define an API** for the package which can be used by other applications.
 
 ## Target Audience
 
-Hugging occurs at build-time, so an application which needs to load it's dependencies at runtime (lazy loading) won't benefit much from hugging -- you'll likely prefer the likes of [RequireJS](http://requirejs.org/). 
+Hugging occurs at build-time, so an application which needs to load it's dependencies at runtime (lazy loading) 
+won't benefit much from hugging -- you'll likely prefer [RequireJS](http://requirejs.org/). 
 
-For frameworks or compiled applications, hugging is awesome. Your code will be clean, safe, and boiler-plate-free. As an added benefit, your unhugged code will work in nodejs applications so long as you're not using any browser-specific functions.
+For frameworks or compiled applications, hugging is awesome. Your code will be clean, safe, and boiler-plate-free. 
+As an added benefit, your unhugged code will work in nodejs applications so long as you're not using any 
+browser-specific functions (for example, `alert`).
 
-## Importing libraries
-You likely depend on external libraries. Here two approaches you can take to import import them into Hug:
-* Some libraries automatically bind to an exports variable if it exists (ex: jQuery, Underscore), these can be treated like any other file in your package by using ```require()``` to bring them in to scope.
-* Libraries which declare a var or introduce a global variable can be added to the ```header``` of the package. The header is prepended to the package and the entire package is wrapped in an anonymous function, so if all the library does is declare variables, those variables will become package-level variables.
+## How to Hug
 
-## Simple Example
+* Define the variables that a file will expose by assigning them to the `exports` variable. An example:
+`exports.numbers = [1,2,3];`.
+* Retrieve the exports of another file by using the `require` function. An example:  
+`var fileExports = require("[A RELATIVE PATH]")`. 
+
+If you want to assign something as the exports object itself, assign it to `module.exports`. Assigning anything
+directly to `exports` would replace the object pointer entirely. If you've done nodejs programming 
+before, you should already be used to this, just remember you can't import npm packages like 
+you can in node -- currently, hug only imports from relative file paths.
+
+## A Simple Example
 Say I have two files:
-``` javascript
-// file1.js 
-exports.word1 = "hello";
-exports.word2 = "world";
+```javascript
+// required.js 
+exports.message = "Hello, world!";
 ```
-``` javascript
-// file2.js
-var file1Exports = require('./file1.js');
-console.log(file1Exports.word1 + " " + file1Exports.word2);
+
+```javascript
+// requiree.js
+var otherFile = require('required.js');
+alert(otherFile.message);
 ```
-When these files run through hug, this will be the generated file:
-``` javascript
+
+```javascript
+// grunt.js
+module.exports = function(grunt){
+ grunt.initConfig({
+ 	hug: {
+ 		simple: {
+ 			src: "./example/simple/**/*",
+ 			dest: "./tmp/simple-example.js"
+ 		}
+ 	}
+ });
+}
+```
+
+When we run `grunt hug`, simple-example.js is generated. When simple-example.js runs in a browser, 
+it will alert "Hello, world!". Note that the window object is never touched, the entire application 
+is within a closure, it leaves no trace after it's run. Here is the file itself:
+
+```javascript
+// simple-example.js
 (function(){
-	var __module0 = (function(){
-		var module = {};
-		var exports = module.exports = {};
-		
-		exports.word1 = "hello";
-		exports.word2 = "world";
-		
-		return module.exports || exports;
-	}());
-	
-	var __module1 = (function(){
-		var module = {};
-		var exports = module.exports = {};
-	
-		var file1Exports = __module0;
-		console.log(file1Exports.word1 + " " + file1Exports.word2);
-		
-		return module.exports || exports;
-	}());
-	
-	return {"file1":__module0,"file2":__module1};
+	var __m0=(function(module,exports){module.exports=exports;
+		exports.message = "Hello, world!";
+		;return module.exports;
+	}({},{}));
+
+	var __m1=(function(module,exports){module.exports=exports;
+		var otherFile = __m0;
+
+		alert(otherFile.message);
+		;return module.exports;
+	}({},{}));
 }());
 ```
 
-## Complex Example
+## A More Complex Example
 
 Say I have the following file structure:
-```
+```javascript
 src/
     language/
         message/
                 aSaying.js
+        composer.js
         words.js
-        speaker.js
-    init.js
+    exports.js
+    speak.js
 grunt.js
 ```
 
 With the following file contents:
 
-``` javascript
-// src/init.js
-var theMessage = require('language/message/aSaying.js').whatTheySay;
-console.log(theMessage);
-```
-
-``` javascript
+```javascript
 // src/language/message/aSaying.js
 var theWord = require('../words.js').aWord;
-var speaker = require('../speaker.js');
+var composer = require('../composer.js');
 
-exports.whatTheySay = speaker(theWord);
+exports.whatTheySay = composer(theWord);
 ```
 
-``` javascript
-// src/language/words.js
-exports.aWord = "world";
-````
-
-``` javascript
-// src/language/speaker.js
+```javascript
+// src/language/composer.js
 exports = function(anything){
 	return "Hello, " + anything + "!";
 };
 ```
 
-``` javascript
+```javascript
+// src/language/words.js
+exports.aWord = "world";
+```
+
+```javascript
+// src/exports.js
+exports.speak = require('./speak.js');
+exports.message = require('./language/message/aSaying.js').whatTheySay;
+```
+
+```javascript
+// src/speak.js
+var theMessage = require('./language/message/aSaying.js').whatTheySay;
+module.exports = function(){
+	alert(theMessage);
+};
+```
+
+```javascript
 // grunt.js
 // ...other config stuff...
 // in the object passed into initConfig:
 hug: {
-	dist: {
-		src: 'src',
-		dest: 'build/hi.js'
-	}
+	advanced: {
+      		src: "./src/**/*",
+        	dest: "./tmp/advanced-example.js",
+        	exportedVariable: "myApi",
+        	exports: "./src/exports.js"
+	},
 }
 // ...other config stuff...
 ```
 
-When grunt is asked to hug this source tree, it'll concatinate the files in order of dependencies, and wrap each file in an anonymous function, and match up dependencies.
+When grunt is asked to hugs these files, it'll concatinate the files in order of dependencies, 
+wrap each file in an anonymous function, and match up dependencies.
 
-Running `hi.js` will output "Hello, world!" on the console, with no trace of the program ever running (nothing leaked to the global scope).
+Running `advanced-example.js` will create an object named `myApi` in the `window` object with the two variables
+defined in exports.js as it's members. Running `myApi.speak()` will alert "Hello, world" in a browser.
 
 ## Usage
 
-Inside your `grunt.js` file, in the object you pass to initConfig, add a section named `hug`. Inside this section, add 1 or more subsections for different `hug` tasks.
+**If you've never used grunt before, you will find it very useful to review the 
+[Getting Started](https://github.com/gruntjs/grunt/blob/0.3-stable/docs/getting_started.md) documentation.**
+
+Inside your `grunt.js` file, in the object you pass to initConfig, add an object named `hug`. 
+Inside this object, add one or more objects for different `hug` tasks.
 
 #### Parameters
 
-##### src ```string```
+##### src `String or Array`
 
-This defines the root directory of your source tree. Any JS file under this directory will become part of the generated file.
+One or more comma separated wildcard patterns as well as an array of wildcard patterns. These files define the source
+code of your package. Which will be concatinated together.
 
-##### dest ```string```
+##### dest `String`
 
-This defines what the path for the generated file should be. Grunt will automatically generate directories if they don't exit.
+The path for the generated file. Grunt will automatically generate directories if they don't exit.
 
-##### (optional) header ```file list```
+##### (optional) exports `String`
 
-A list of files to prepend to the package. These files are not wrapped in anonymous functions, so any variables that are declared will be visible to the entire package. This is a good choice for utility functions or libraries which don't support exporting their variables.
+A path to a file to use as the exports object for the package. Whatever the file exports, will be exported by the entire
+package. In essence, this file should define the external api of your package.
 
-##### (optional) exportsVariable ```string```
+##### (optional) exportedVariable `String` (defaults to "exports")
 
-This is an optional parameter. If provided, the generated file will produce a global variable with the given name holding the export tree. For example, if we had set `exportsVariable: 'hugExample'` for the example above, and ran the generated script, we would end up with a global variable like this:
+If exports is defined, this will be the variable exported to the environment. Whatever the `exports` file exports 
+will be assigned to this variable. By setting the value of this to "module.exports" you can create a package that
+can be imported by other hug or nodejs applications.
 
-``` javascript
-console.log(hugExample);
-// Output:
-//	hugExample: {
-//		language: {
-//			message: {
-//				aSaying: {
-//				whatTheySay: 'Hello, world!'
-//			},
-//			words: {
-//				aWord: "world"
-//			},
-//			speaker: function(anything){return "Hello, " + anything + "!";}
-//		},
-//		init: {}
-//	}
+##### (optional & advanced) moduleVariableName `String` (defaults to "module")
+
+Setting this parameter will break compatibility with importable nodejs modules.
+This parameter allows you to overwrite the variable name used to refer to modules internally. This is useful if
+you already use the `module` variable for something else.
+
+##### (optional & advanced) exportsVariableName `String` (defaults to "exports")
+
+Setting this parameter will break compatibility with importable nodejs modules.
+This parameter allows you to overwrite the variable name used to refer to exports internally. This is useful if
+you already use the `exports` variable for something else.
+
+##### (optional & advanced) requireFunctionName `String` (defaults to "require")
+
+Setting this parameter will break compatibility with importable nodejs modules.
+This parameter allows you to overwrite the variable name used to refer to the require function. 
+This is useful if you already use the `require` variable for something else.
+
+## Importing libraries
+Web frameworks and applications that can normally be imported into nodejs applications work as intended.
+For example, you can just `require` the underscore library file and use it as you would normally.
+
+Libraries which aren't node-friendly can be made importable without modifying the original file by adding an
+'adapter' file. Here's an example on how to make jQuery importable:
+
+```javascript
+// jquery-module.js
+require('./jquery.js');
+module.exports = window.jQuery;
+jQuery.noConflict();
 ```
-Note that you can't use the exportsVariable in the source code, you have to use the `require` method to access the exports of other files.
 
-## Known Limitations and Possibilities
-* You cannot `require` a file outside of your source tree. For third-party libraries use grunt `concat` to concatinate them ahead of the hug generated file. You'll also likely want to minify the generated file.
-* You can set `exportsVariable` to `exports` and use the generated file in another source tree (which can then also be hugged) as a way to cleanly encapsulate your APIs.
+First we require the actual library so that it gets included in our package and so that it's evaluated before
+this file. Then we export out the reference to jQuery. Finally, we call jQuery.noConflict() which returns the
+jQuery window variable to it's previous owner (but our exports still points to the one we want).
+
+Now we can import jquery in other files like so: `var $ = require('./jquery-module.js');`.
 

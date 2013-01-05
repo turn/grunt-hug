@@ -6,24 +6,18 @@
  * Licensed under the MIT license.
  * https://github.com/ozanturgut/grunt-hug/blob/master/LICENSE-MIT
  */
-
 module.exports = function(grunt) {
   'use strict';
 
   // Project configuration.
   grunt.initConfig({
-    test_vars: {
-      name: 'grunt-hug',
-      version: '0.1.0'
-    },
-
     lint: {
-      all: ['grunt.js', 'tasks/*.js', '<config:nodeunit.tasks>']
+      all: ['grunt.js', 'tasks/*.js', 'lib/**/*.js', '<config:nodeunit.tasks>']
     },
 
     jshint: {
       options: {
-        curly: true,
+        curly: false,
         eqeqeq: true,
         immed: true,
         latedef: true,
@@ -49,7 +43,7 @@ module.exports = function(grunt) {
       advanced: {
         src: "./example/advanced/**/*",
         dest: "./tmp/advanced-example.js",
-        exportsVariable: "example",
+        exportedVariable: "myApi",
         exports: "./example/advanced/exports.js"
       },
       simple: {
