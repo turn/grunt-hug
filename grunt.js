@@ -34,6 +34,7 @@ module.exports = function(grunt) {
         boss: true,
         eqnull: true,
         node: true,
+        strict: false,
         es5: true
       }
     },
@@ -45,14 +46,10 @@ module.exports = function(grunt) {
 
     // Configuration to be run (and then tested).
     hug: {
-      test: {
-        src: "./test/fixtures/**/*",
-        dest: "./tmp/test.js",
-        exportsVariable: "theGlobal"
-      },
       example: {
         src: "./example/**/*",
-        dest: "./tmp/example.js"
+        dest: "./tmp/example.js",
+        exports: "./example/exports.js"
       }
     },
 

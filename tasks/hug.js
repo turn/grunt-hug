@@ -4,27 +4,21 @@ var path = require('path'),
 module.exports = function(grunt){
 	grunt.registerMultiTask('hug', 'Wrap client-side files in anonymous functions, and concatenate with dependency solving', function(){
 		var complete = this.async(),
-			srcList = grunt.file.expandFiles(this.file.src),
-			exportMap = this.data.exports,
-			exportsVariable = this.data.exportsVariable,
-			destPath = this.file.dest,
-			pathList = [];
+			destPath = this.file.dest;
 
-		srcList.forEach(function(src){
-			pathList.push(path.resolve(src));
+		hug({
+			srcList: grunt.file.expandFiles(this.file.src),
+			exports: this.data.exports,
+			exportsVariable: this.data.exportsVariable,
+			success: function(content){
+				grunt.file.write(destPath, content);
+				grunt.log.writeln('File "' + destPath + '" created.');
+				complete(true);
+			},
+			error: function(message){
+				grunt.log.error(message);
+				complete(false);
+			}
 		});
-
-//	try{
-		hug(pathList, exportMap, function(content){
-			if(exportMap) content = exportsVariable + "=" + content;
-
-			grunt.file.write(destPath, content);
-			grunt.log.writeln('File "' + destPath + '" created.');
-			complete(true);
-		});
-//	} catch(e){
-//		grunt.log.error(e.message);
-//		complete(false);
-//	}
 	});
 };
