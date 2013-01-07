@@ -1,7 +1,7 @@
 {
   "name": "grunt-hug",
   "description": "Concatinate your web application without worrying about the order of your files.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "homepage": "https://github.com/ozanturgut/grunt-hug",
   "author": {
     "name": "Ozan Turgut",
