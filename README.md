@@ -229,3 +229,6 @@ jQuery window variable to it's previous owner (but our exports still points to t
 
 Now we can import jquery in other files like so: `var $ = require('./jquery-module.js');`.
 
+### Soy Templates
+Closure (Soy) templates work beautifully with grunt-hug. Just set your file's namespace to "module.exports" and you're done! 
+You can now`require` the generated soy file and it will provide an object with the templates in it.
