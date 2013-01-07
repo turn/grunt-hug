@@ -171,6 +171,15 @@ code of your package. Which will be concatinated together.
 
 The path for the generated file. Grunt will automatically generate directories if they don't exit.
 
+##### (optional) header `String or Array`
+
+File(s) which will be prepended to the beginning of the package, making any variable defined in them package-global.
+Note that these files do not use the exports/require pattern -- what they would normally define as global become
+limited to the scope of the package, so any file can use their variables without requiring them in.
+
+This is particularly useful for utility functions that you do not want to keep requiring, or for libraries which
+require other libraries in order to work.
+
 ##### (optional) exports `String`
 
 A path to a file to use as the exports object for the package. Whatever the file exports, will be exported by the entire
