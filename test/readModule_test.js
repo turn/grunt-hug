@@ -13,7 +13,7 @@ exports.hug = {
 			};
 		
 		var dependencyFinder = new RegExp("require\\([\'|\"](.*)[\'|\"]\\)","gi");
-		var result = readModule.fulfillRequirements(src, srcPath, dependencyManager, dependencyFinder);
+		var result = readModule.fulfillRequirements(src, srcPath, [srcPath], dependencyManager, dependencyFinder);
 
 		test.ok(dependencyManager.getId.calledWith(srcPath), "get id");
 		test.ok(dependencyManager.add.calledWith(srcPath, srcPath), "add");
