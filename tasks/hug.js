@@ -11,6 +11,7 @@ module.exports = function(grunt){
 		options = {
 			exportedVariable: this.data.exportedVariable,
 			exports: this.data.exports,
+			headList: this.data.header? grunt.file.expandFiles(this.data.header) : [],
 			moduleVariableName: this.data.moduleVariableName,
 			exportsVariableName: this.data.exportsVariableName,
 			requireFunctionName: this.data.requireFunctionName,

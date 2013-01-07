@@ -35,7 +35,7 @@ module.exports = function(grunt) {
 
     // Before generating any new files, remove any previously-created files.
     clean: {
-      test: ['./tmp']
+      test: ['./tmp', './**/*.soy.js']
     },
 
     // Configuration to be run (and then tested).
