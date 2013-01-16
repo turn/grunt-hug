@@ -12,24 +12,26 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     lint: {
-      all: ['grunt.js', 'tasks/*.js', 'lib/**/*.js', '<config:nodeunit.tasks>']
+      all: ['grunt.js', 'tasks/*.js', 'lib/**/*.js']
     },
 
     jshint: {
-      options: {
-        curly: false,
-        eqeqeq: true,
-        immed: true,
-        latedef: true,
-        newcap: true,
-        noarg: true,
-        sub: true,
-        undef: true,
-        boss: true,
-        eqnull: true,
-        node: true,
-        strict: false,
-        es5: true
+      all: {
+        options:{
+          curly: false,
+          eqeqeq: true,
+          immed: true,
+          latedef: false,
+          newcap: true,
+          noarg: true,
+          sub: true,
+          undef: true,
+          boss: true,
+          eqnull: true,
+          strict: false,
+          node: true,
+          loopfunc: true  
+        }
       }
     },
 
@@ -48,12 +50,13 @@ module.exports = function(grunt) {
       },
       simple: {
         src: "./example/simple/**/*",
-        dest: "./tmp/simple-example.js"
+        dest: "./tmp/simple-example.js",
+        verbose: true
       }
     },
 
     // Unit tests.
-    nodeunit: {
+    test: {
       tasks: ['test/*_test.js']
     }
   });
@@ -64,11 +67,7 @@ module.exports = function(grunt) {
   // The clean plugin helps in testing.
   grunt.loadNpmTasks('grunt-contrib-clean');
 
-  // Whenever the 'test' task is run, first clean the 'tmp' dir, then run this
-  // plugin's task(s), then test the result.
-  grunt.renameTask('test', 'nodeunit');
-  grunt.registerTask('test', 'clean hug nodeunit');
-
   // By default, lint and run all tests.
-  grunt.registerTask('default', 'lint test');
+  grunt.registerTask('default', 'lint test clean hug');
+
 };

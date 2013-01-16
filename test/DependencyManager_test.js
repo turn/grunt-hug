@@ -1,11 +1,11 @@
 var sinon = require('sinon'),
 	mocks = require('mocks'),
 	path = require('path'),
-	readModule = mocks.loadFile(path.resolve(path.dirname(module.filename), '../lib/DependencyManager.js'));
+	theModule = mocks.loadFile(path.resolve(path.dirname(module.filename), '../lib/dependencyManager.js'));
 
 exports.hug = {
 	setUp: function(callback){
-		this.dependencyManager = new readModule.DependencyManager();
+		this.dependencyManager = new theModule.DependencyManager();
 		callback();
 	},
 	
