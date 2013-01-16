@@ -171,6 +171,22 @@ code of your package. Which will be concatinated together.
 
 The path for the generated file. Grunt will automatically generate directories if they don't exit.
 
+##### (optional) path `String or Array`
+
+Grunt will use the given paths as a base (in addition to the current directory) when resolving dependencies.
+
+For example if you set `path` to `["./components"]`, and grunt runs in to a file with `require('jquery/jquery.js')`
+Grunt will search for the file both in the location relative to where it was declared, and in 
+`./components/jquery/jquery.js`. 
+This works nicely with package managers such as [Bower](http://twitter.github.com/bower/) or [NPM](https://npmjs.org/).
+
+##### (optional) extensions `String or Array`
+
+Grunt will use this list of extensions when trying to resolve dependencies for files it can't find. By default
+the extensions array is ['', '.js'], meaning, grunt will first try to find an exact match and then try to find
+the same filename with the '.js' extension. So in the previous example for `path` we could have just used
+`require('jquery/jquery')` and it would have worked just as well.
+
 ##### (optional) header `String or Array`
 
 File(s) which will be prepended to the beginning of the package, making any variable defined in them package-global.
