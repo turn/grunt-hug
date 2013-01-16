@@ -7,7 +7,11 @@ anonymous function.
 
 ## Why Hugging Will Make You Happy
 
+* **Node-like `require` statements.** This tells grunt how your files are related so it can package your files in the
+right order. These statements won't be in the final packaged file.
 * **Automated dependency resolution.** It will figure out the required order for your files when concatinating.
+* **Path searching for dependencies.** Works great with[Bower](http://twitter.github.com/bower/) or 
+[NPM](https://npmjs.org/), just add them to the search path.
 * **File-level variables** declarations won't leak to the environment and will remain at file-level.
 * Allows you to **define an API** for the package which can be used by other applications.
 
