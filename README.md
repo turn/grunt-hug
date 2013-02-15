@@ -1,7 +1,7 @@
 # grunt-hug [![Build Status](https://secure.travis-ci.org/ozanturgut/grunt-hug.png?branch=master)](http://travis-ci.org/ozanturgut/grunt-hug)
 
 Hug makes maintaining and packaging web applications easier, it is a [grunt](http://gruntjs.com) plugin. 
-Tell it how to find your files and it will concatinate them in the right order of dependencies. 
+Tell it how to find your files and it will concatenate them in the right order of dependencies. 
 It will also prevent accidental variable leakage between files by wrapping each file in a self-executing 
 anonymous function.
 
@@ -9,7 +9,7 @@ anonymous function.
 
 * **Node-like `require` statements.** This tells grunt how your files are related so it can package your files in the
 right order. These statements won't be in the final packaged file.
-* **Automated dependency resolution.** It will figure out the required order for your files when concatinating.
+* **Automated dependency resolution.** It will figure out the required order for your files when concatenating.
 * **Path searching for dependencies.** Works great with[Bower](http://twitter.github.com/bower/) or 
 [NPM](https://npmjs.org/), just add them to the search path.
 * **File-level variables** declarations won't leak to the environment and will remain at file-level.
@@ -150,7 +150,7 @@ hug: {
 // ...other config stuff...
 ```
 
-When grunt is asked to hugs these files, it'll concatinate the files in order of dependencies, 
+When grunt is asked to hugs these files, it'll concatenate the files in order of dependencies, 
 wrap each file in an anonymous function, and match up dependencies.
 
 Running `advanced-example.js` will create an object named `myApi` in the `window` object with the two variables
@@ -169,7 +169,7 @@ Inside this object, add one or more objects for different `hug` tasks.
 ##### src `String or Array`
 
 One or more comma separated wildcard patterns as well as an array of wildcard patterns. These files define the source
-code of your package. Which will be concatinated together.
+code of your package. Which will be concatenated together.
 
 ##### dest `String`
 
