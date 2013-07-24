@@ -10,7 +10,7 @@ module.exports = function(grunt){
 		options.src = grunt.file.expand({filter: "isFile"}, this.filesSrc);
 
 		options.exportedVariable = options.exportedVariable && grunt.template.process(options.exportedVariable, gruntConfig);
-		options.header = options.header? grunt.file.expandFiles(options.header) : [];
+		options.header = options.header? grunt.file.expand({filter: "isFile"},options.header) : [];
 		options.path = options.path? grunt.file.expand({filter: "isDirectory"},options.path) : [];
 
 		options.exports = options.exports &&  grunt.template.process(options.exports, gruntConfig);
