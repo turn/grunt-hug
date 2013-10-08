@@ -1,7 +1,7 @@
 {
   "name": "grunt-hug",
   "description": "Concatinate your web application without worrying about the order of your files.",
-  "version": "0.4.1",
+  "version": "0.5.2",
   "homepage": "https://github.com/ozanturgut/grunt-hug",
   "author": {
     "name": "Ozan Turgut",
@@ -26,8 +26,10 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "grunt": "~0.3.15",
-    "grunt-contrib-clean": "~0.3.1",
+    "grunt": "~0.4.1",
+    "grunt-contrib-clean": "~0.4.0rc6",
+    "grunt-contrib-nodeunit": "~0.1.1",
+    "grunt-contrib-jshint": "~0.1.0",
     "mocks": "~0.0.10",
     "sinon": "~1.5.2"
   },

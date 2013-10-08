@@ -11,12 +11,11 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
-    lint: {
-      all: ['grunt.js', 'tasks/*.js', 'lib/**/*.js']
-    },
-
     jshint: {
       all: {
+        files: {
+          src: ['Gruntfile.js', 'tasks/*.js', 'lib/**/*.js']
+        },
         options:{
           curly: false,
           eqeqeq: true,
@@ -37,7 +36,9 @@ module.exports = function(grunt) {
 
     // Before generating any new files, remove any previously-created files.
     clean: {
-      test: ['./tmp', './**/*.soy.js']
+      test: {
+        src: ['./tmp']
+      }
     },
 
     // Configuration to be run (and then tested).
@@ -56,7 +57,7 @@ module.exports = function(grunt) {
     },
 
     // Unit tests.
-    test: {
+    nodeunit: {
       tasks: ['test/*_test.js']
     }
   });
@@ -66,8 +67,16 @@ module.exports = function(grunt) {
 
   // The clean plugin helps in testing.
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-nodeunit');
+
+  grunt.registerTask('test', 'nodeunit');
 
   // By default, lint and run all tests.
-  grunt.registerTask('default', 'lint test clean hug');
-
+  grunt.registerTask('default', [
+    'jshint', 
+    'nodeunit', 
+    'clean', 
+    'hug'
+  ]);
 };
